@@ -1,1 +1,7 @@
 lib/
+
+# CMake
+cmake-build-*/
+
+# CLion
+.idea/
