@@ -7,14 +7,14 @@
 #include <vector>
 #include <algorithm>
 
-/** Inicia um Sudoku vazio.
+/** Initializes an empty sudoku.
  */
 Sudoku::Sudoku() {
 	this->initialize();
 }
 
 /**
- * Inicia um Sudoku com um conteudo inicial.
+ * Initializes the sudoku with given values.
  * Lanca excepcao IllegalArgumentException se os valores
  * estiverem fora da gama de 1 a 9 ou se existirem n�meros repetidos
  * por linha, coluna ou bloc 3x3.
@@ -54,7 +54,7 @@ void Sudoku::initialize() {
 }
 
 /**
- * Obtem o conteudo actual (so para leitura!).
+ * Gets the current content of the sudoku (read only).
  */
 int** Sudoku::getNumbers() {
 	int** ret = new int*[9];
@@ -70,59 +70,50 @@ int** Sudoku::getNumbers() {
 }
 
 /**
- * Verifica se o Sudoku ja esta completamente resolvido
+ * Checks if the sudoku is already complete (all spaces are filled with a number).
  */
 bool Sudoku::isComplete() {
 	return countFilled == 9 * 9;
 }
 
 
+bool Sudoku::isValid(int line, int col, int num) {
+    return !lineHasNumber[line][num] && !columnHasNumber[col][num] && !block3x3HasNumber[line / 3][col / 3][num];
+}
+
 
 /**
  * Solves the Sudoku.
- * Retorna indicacao de sucesso ou insucesso (sudoku impossivel).
+ * Returns true if the sudoku is possible, false if impossible.
  */
 bool Sudoku::solve() {
     if (isComplete()) {
+        // We filled all the spaces following the restrictions
         return true;
     }
 
-    vector<int> candidates, temp, intersection;
-
-    for (int i = 0; i < 9; ++i) {
-        for (int j = 0; j < 9; ++j) {
-            if (numbers[i][j] == 0) {
-                for (int k = 1; k < 10; ++k) {
-                    if (!columnHasNumber[j][k]) {
-                        candidates.push_back(k);
+    for (int i = 0; i < 9; ++i) { // For every line
+        for (int j = 0; j < 9; ++j) { // For every column
+            if (numbers[i][j] == 0) { // If we find a blank space
+                for (int k = 1; k < 10; ++k) { // For every possible number from 1 to 9
+                    if (isValid(i, j, k)) { // Check if it's valid (can be placed there)
+                        numbers[i][j] = k;
+                        ++countFilled;
+                        lineHasNumber[i][k] = true;
+                        columnHasNumber[j][k] = true;
+                        block3x3HasNumber[i / 3][j / 3][k] = true;
+                        // Try to solve the sudoku with the chosen number
+                        if (solve()) return true;
+                        // If we got here the chosen number failed, so reset and try again
+                        numbers[i][j] = 0;
+                        --countFilled;
+                        lineHasNumber[i][k] = false;
+                        columnHasNumber[j][k] = false;
+                        block3x3HasNumber[i / 3][j / 3][k] = false;
                     }
                 }
-
-                for (int k = 1; k < 10; ++k) {
-                    if (!lineHasNumber[i][k]) {
-                        temp.push_back(k);
-                    }
-                }
-
-                set_intersection(candidates.begin(), candidates.end(), temp.begin(), temp.end(), back_inserter(intersection));
-                candidates = intersection;
-                intersection.clear();
-                temp.clear();
-
-                for (int k = 1; k < 10; ++k) {
-                    if (!block3x3HasNumber[i / 3][j / 3][k]) {
-                        temp.push_back(k);
-                    }
-                }
-
-                set_intersection(candidates.begin(), candidates.end(), temp.begin(), temp.end(), back_inserter(intersection));
-                candidates = intersection;
-
-                for (int candidate : candidates) {
-                    numbers[i][j] = candidate;
-                    ++countFilled;
-                    if (solve()) return true;
-                }
+                // All possible numbers failed, this branch does not lead to the solution
+                return false;
             }
         }
     }
