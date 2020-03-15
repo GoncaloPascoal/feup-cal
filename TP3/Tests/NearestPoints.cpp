@@ -69,11 +69,13 @@ Result nearestPoints_BF_SortByX(vector<Point> &vp) {
 
 	sortByX(vp, 0, vp.size() - 1);
 
+	double distance;
+
     for (size_t i = 0; i < vp.size(); ++i) {
         for (size_t j = i + 1; j < vp.size(); ++j) {
-            double distance = vp.at(i).distance(vp.at(j));
-
-            if (distance < minDistance) {
+            if (abs(vp.at(i).x - vp.at(j).x) > minDistance) {
+                break;
+            } else if ((distance = vp.at(i).distance(vp.at(j))) < minDistance) {
                 minDistance = distance;
                 p1 = vp.at(i);
                 p2 = vp.at(j);
@@ -92,7 +94,20 @@ Result nearestPoints_BF_SortByX(vector<Point> &vp) {
  * "res" contains initially the best solution found so far.
  */
 static void npByY(vector<Point> &vp, int left, int right, Result &res) {
-	// TODO
+    double dist;
+
+	for (int i = left; i <= right; ++i) {
+	    for (int j = i + 1; j <= right; ++j) {
+	        if (abs(vp.at(i).y - vp.at(j).y) > res.dmin) {
+	            break;
+	        }
+	        else if ((dist = vp.at(i).distance(vp.at(j))) < res.dmin) {
+	            res.dmin = dist;
+	            res.p1 = vp.at(i);
+	            res.p2 = vp.at(j);
+	        }
+	    }
+	}
 }
 
 /**
@@ -113,23 +128,40 @@ static Result np_DC(vector<Point> &vp, int left, int right, int numThreads) {
 
 	// Divide in halves (left and right) and solve them recursively,
 	// possibly in parallel (in case numThreads > 1)
-	Result leftRes = np_DC(vp, left, right / 2, numThreads);
-	Result rightRes = np_DC(vp, right / 2 + 1, right, numThreads);
+	int leftEnd = left + (right - left) / 2, rightBegin = left + (right - left) / 2 + 1;
+
+	Result leftRes = np_DC(vp, left, leftEnd, numThreads);
+	Result rightRes = np_DC(vp, rightBegin, right, numThreads);
 
 	// Select the best solution from left and right
 	Result res = leftRes.dmin < rightRes.dmin ? leftRes : rightRes;
 
 	// Determine the strip area around middle point
-	// TODO
+	double stripX = (vp.at(leftEnd).x + vp.at(rightBegin).x) / 2;
+	int stripLeft = left, stripRight = right;
+
+	for (int i = leftEnd; i >= left; --i) {
+	    if (abs(stripX - vp.at(i).x) > res.dmin) {
+	        stripLeft = i - 1;
+            break;
+	    }
+	}
+
+    for (int i = rightBegin; i <= right; ++i) {
+        if (abs(stripX - vp.at(i).x) > res.dmin) {
+            stripRight = i - 1;
+            break;
+        }
+    }
 
 	// Order points in strip area by Y coordinate
-	// TODO
+	sortByY(vp, stripLeft, stripRight);
 
 	// Calculate nearest points in strip area (using npByY function)
-	// TODO
+	npByY(vp, stripLeft, stripRight, res);
 
 	// Reorder points in strip area back by X coordinate
-	// TODO
+	sortByX(vp, stripLeft, stripRight);
 
 	return res;
 }
