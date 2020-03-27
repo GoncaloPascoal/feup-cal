@@ -173,13 +173,72 @@ bool Graph<T>::addEdge(const T &sourc, const T &dest, double w) {
 
 template<class T>
 void Graph<T>::unweightedShortestPath(const T &orig) {
-	// TODO
+    queue<Vertex<T>*> queue;
+
+    for (Vertex<T>* vertex : vertexSet) {
+        vertex->path = NULL;
+
+        if (vertex->info == orig) {
+            vertex->dist = 0;
+            queue.push(vertex);
+        }
+        else {
+            vertex->dist = numeric_limits<double>::max();
+        }
+    }
+
+    while (!queue.empty()) {
+        Vertex<T>* vert = queue.front(); queue.pop();
+
+        for (const Edge<T>& edge : vert->adj) {
+            if (edge.dest->dist == numeric_limits<double>::max()) {
+                queue.push(edge.dest);
+
+                edge.dest->dist = vert->dist + 1;
+                edge.dest->path = vert;
+            }
+        }
+    }
 }
 
 
 template<class T>
 void Graph<T>::dijkstraShortestPath(const T &origin) {
-	// TODO
+	MutablePriorityQueue<Vertex<T>> queue;
+
+	for (Vertex<T>* vertex : vertexSet) {
+	    vertex->path = NULL;
+
+	    if (vertex->info == origin) {
+	        vertex->dist = 0;
+	        vertex->queueIndex = 0;
+	        queue.insert(vertex);
+	    }
+	    else {
+	        vertex->dist = numeric_limits<double>::max();
+	    }
+	}
+
+    while (!queue.empty()) {
+        Vertex<T>* vertex = queue.extractMin();
+
+        for (const Edge<T>& edge : vertex->adj) {
+            bool notInQueue = edge.dest->dist == numeric_limits<double>::max();
+
+            if (edge.dest->dist > vertex->dist + edge.weight) {
+                edge.dest->dist = vertex->dist + edge.weight;
+                edge.dest->path = vertex;
+
+                if (notInQueue) {
+                    edge.dest->queueIndex = edge.dest->dist;
+                    queue.insert(edge.dest);
+                }
+                else {
+                    queue.decreaseKey(edge.dest);
+                }
+            }
+        }
+    }
 }
 
 
@@ -192,7 +251,19 @@ void Graph<T>::bellmanFordShortestPath(const T &orig) {
 template<class T>
 vector<T> Graph<T>::getPathTo(const T &dest) const{
 	vector<T> res;
-	// TODO
+
+	const Vertex<T>* destPtr = findVertex(dest);
+	const Vertex<T>* pathPtr = destPtr->path;
+
+	res.push_back(destPtr->info);
+
+	while (pathPtr != NULL) {
+	    res.push_back(pathPtr->info);
+	    pathPtr = pathPtr->path;
+	}
+
+	std::reverse(res.begin(), res.end());
+
 	return res;
 }
 
