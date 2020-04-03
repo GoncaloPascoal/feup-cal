@@ -109,10 +109,10 @@ public:
 	vector<Vertex<T> *> getVertexSet() const;
 
 	// Fp05 - single source
-	void unweightedShortestPath(const T &s);    //TODO...
-	void dijkstraShortestPath(const T &s);      //TODO...
-	void bellmanFordShortestPath(const T &s);   //TODO...
-	vector<T> getPathTo(const T &dest) const;   //TODO...
+	void unweightedShortestPath(const T &s);    
+	void dijkstraShortestPath(const T &s);      
+	void bellmanFordShortestPath(const T &s);   
+	vector<T> getPathTo(const T &dest) const;   
 
 	// Fp05 - all pairs
 	void floydWarshallShortestPath();   //TODO...
@@ -244,7 +244,27 @@ void Graph<T>::dijkstraShortestPath(const T &origin) {
 
 template<class T>
 void Graph<T>::bellmanFordShortestPath(const T &orig) {
-	// TODO
+	for (Vertex<T>* vertex : vertexSet) {
+		vertex->path = NULL;
+		
+		if (vertex->info == orig) {
+			vertex->dist = 0;
+		}
+		else {
+			vertex->dist = numeric_limits<double>::max();
+		}
+	}
+
+	for (size_t i = 1; i < vertexSet.size(); ++i) { // |V| - 1 iterations
+		for (Vertex<T>* vertex : vertexSet) {
+			for (Edge<T>& edge : vertex->adj) {
+				if (edge.dest->dist > vertex->dist + edge.weight) {
+					edge.dest->dist = vertex->dist + edge.weight;
+					edge.dest->path = vertex;
+				}
+			}
+		}
+	}
 }
 
 
@@ -271,15 +291,68 @@ vector<T> Graph<T>::getPathTo(const T &dest) const{
 
 /**************** All Pairs Shortest Path  ***************/
 
+
+static vector<vector<double>> distances;
+static vector<vector<int>> previous;
+
 template<class T>
 void Graph<T>::floydWarshallShortestPath() {
-	// TODO
+	distances = vector<vector<double>>(vertexSet.size(), vector<double>(vertexSet.size(), numeric_limits<double>::max()));
+	previous = vector<vector<int>>(vertexSet.size(), vector<int>(vertexSet.size(), -1));
+
+	for (size_t i = 0; i < vertexSet.size(); ++i) {
+		distances[i][i] = 0.0;
+
+		for (const Edge<T>& edge : vertexSet[i]->adj) {
+			auto it = find(vertexSet.begin(), vertexSet.end(), edge.dest);
+
+			if (it != vertexSet.end()) {
+				distances[i][distance(vertexSet.begin(), it)] = edge.weight;
+				previous[i][distance(vertexSet.begin(), it)] = i;
+			}
+		}
+	}
+
+	for (size_t k = 0; k < vertexSet.size(); ++k) {
+		for (size_t i = 0; i < vertexSet.size(); ++i) {
+			for (size_t j = 0; j < vertexSet.size(); ++j) {
+				if (distances[i][j] > distances[i][k] + distances[k][j]) {
+					distances[i][j] = distances[i][k] + distances[k][j];
+					previous[i][j] = previous[k][j];
+				}
+			}
+		}
+	}
 }
 
 template<class T>
 vector<T> Graph<T>::getfloydWarshallPath(const T &orig, const T &dest) const{
 	vector<T> res;
-	// TODO
+	
+	int origIdx = -1, destIdx = -1;
+
+	for (size_t i = 0; i < vertexSet.size(); ++i) {
+		if (vertexSet[i]->info == orig) {
+			origIdx = i;
+		}
+		else if (vertexSet[i]->info == dest) {
+			destIdx = i;
+		}
+	}
+
+	if (origIdx != -1 && destIdx != -1) {
+		res.push_back(dest);
+
+		int prevIdx = previous[origIdx][destIdx];
+
+		while (prevIdx >= 0) {
+			res.push_back(vertexSet[prevIdx]->info);
+			prevIdx = previous[origIdx][prevIdx];
+		}
+	}
+
+	reverse(res.begin(), res.end());
+
 	return res;
 }
 
