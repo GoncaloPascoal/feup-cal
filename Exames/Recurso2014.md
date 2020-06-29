@@ -34,7 +34,7 @@ c|2
 g|2
 p|1
 r|2
-![](Imagens\Huffman2014R.png)
+![](Imagens\Huffman2014R.png?raw=true)
 
 A posição dos caracteres `a`, `c`, `g` e `r` na árvore pode ser trocada, mas podemos concluir que três destes quatro caracteres serão sempre codificados com 2 bits e restante caracter, juntamente com o caracter `p` serão codificados com 3 bits.
 
