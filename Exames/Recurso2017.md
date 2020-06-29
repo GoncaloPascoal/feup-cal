@@ -72,8 +72,11 @@ bfs(G = (V, E), s):
 Este algoritmo tem complexidade temporal `O(|E| + |V|)` onde `|E|` é o número de arestas e `|V|` o número de vértices do grafo. Este valor pode ser facilmente deduzido analisando o algoritmo: todos os vértices são explorados e cada vez que um vértice é explorado, analisamos todas as arestas que originam nesse vértice.
 
 ❓ **4. a)** O fluxo máximo a alimentar o sistema é de 10 litros / hora (tot = 7 + 3 = 10).
+
 ![](Imagens/FluxoAspersores1.png)
+
 ❓ **b)** O fluxo que passa pela tubulação `E -> H`, se for instalado um aspersor no vértice E é 0 (usando o algoritmo de Edmonds-Karp para o fluxo máximo):
+
 ![](Imagens/FluxoAspersores2.png)
 
 **5. a)** Este problema é uma instância do problema da distância de edição entre duas strings. Neste caso a distância evolutiva entre os dois genes é 3. As mutações necessárias para converter XPTO em OPTX são:
